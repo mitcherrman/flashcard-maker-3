@@ -34,7 +34,7 @@ def main():
 
     # ── 2. Ask for test‑mode if flag not supplied ─────────────────────────
     if args.test_chunks is None:
-        reply = input("Activate test mode? (y/N) ").lower().strip()
+        reply = input("Activate test mode? (y/n) ").lower().strip()
         if reply.startswith("y"):
             args.test_chunks = 2   # default sample size
 
@@ -59,11 +59,16 @@ def main():
     print(f"\n✅  Deck:  {deck_path.name}")
     print(f"✅  JSON:  {json_path.name}")
 
-    # ── 6. Prompt to play Game 2 ──────────────────────────────────────────
-    reply = input("\nPlay Game 2 now? (y/n) Ctrl + C to exit at any time").lower().strip()
+        # ── 6. Prompt to play Game 2 ──────────────────────────────────────────
+    reply = input("\nPlay Game 2 now? (Y/n) ").lower().strip()
     if reply.startswith("n"):
-        print("Done!  Import the .apkg into Anki.")
+        print("Bye!  Import the .apkg into Anki whenever you like.")
         sys.exit()
+
+    # ── 6-b. Ask for Endless mode if not set via CLI flag ────────────────
+    if not args.endless:
+        endless_reply = input("Enable endless mode? (y/n) ").lower().strip()
+        args.endless = endless_reply.startswith("y")
 
     # ── 7. Launch Mastery Drill ──────────────────────────────────────────
     play(load_cards(json_path), endless=args.endless)
