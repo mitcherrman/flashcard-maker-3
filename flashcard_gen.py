@@ -10,25 +10,29 @@ client = OpenAI()                               # picks up key from env
 
 def _cards_from_chunk(chunk: str, max_cards=10):
     sys_msg = SYSTEM_PROMPT = """
-You are an expert flash-card author.
+You are an expert flash‑card author.
 
 Goals:
-1. Create Q-A pairs that help a student remember the *substantive* facts,
-   definitions, dates, or numbers in the text.
-2. Each card must be self-contained – never refer to “page X”, “see above”,
-   or “the exhibit”.
-3. Answers must be concrete and complete, never “he had issues with exhibits”.
+1. Create *multiple‑choice* Q‑A pairs that help a student remember the
+   substantive facts, definitions, dates, or numbers in the text.
+2. Each card must be self‑contained; never refer to pages or exhibits.
+3. Provide **exactly one** correct answer and **two** plausible but wrong
+   answers (distractors).
 4. Skip cards if the answer would be too vague or redundant.
 
 Return JSON:
 {
   "cards": [
-    {"front": "...", "back": "..."},
-    ...
+    {
+      "front": "...question...",
+      "back":  "...correct answer...",
+      "distractors": ["wrong A", "wrong B"]
+    }
   ]
 }
-Limit to **{{max_cards}}** cards.
+Limit to {max_cards} cards.
 """
+
 
     resp = client.chat.completions.create(
     model="gpt-4o-mini",

@@ -1,56 +1,95 @@
-# game2_cli.py  – Mastery Drill with detailed counters
+# game2_cli.py — Basic & Multiple‑choice drills
 import json, random, pathlib, argparse
 
+# ────────────────────────────────────────────────────────────────
 def load_cards(json_file: str):
     data = json.loads(pathlib.Path(json_file).read_text(encoding="utf-8"))
     for i, c in enumerate(data):
         c.setdefault("id", f"c{i}")
+        c.setdefault("distractors", [])          # may be empty
     return data
-
-def ask(card, idx, total, correct, wrong):
+# ────────────────────────────────────────────────────────────────
+# BASIC mode helpers
+def ask_basic(card, idx, total, correct, wrong):
     print(f"\n── Card {idx}/{total}  |  ✔ {correct}  ✘ {wrong} ──")
     print(f"❓  {card['front']}")
-    ans = input("Your answer (press enter to reveal): ").strip()
+    ans = input("Press Enter to reveal answer: ")
     print(f"✅  {card['back']}\n")
-    if ans == "":
-        return input("Did you remember it? type 'y' for yes or 'n' for no) ").lower().startswith("y")
-    return ans.lower().strip(" .,!") == card["back"].lower().strip(" .,!")
+    return input("Did you recall it? (y/N) ").lower().startswith("y")
 
-def play(cards, endless=False):
-    draw_pile = cards[:]         # cards still to answer
-    random.shuffle(draw_pile)
+def play_basic(cards, endless=False):
+    remaining = cards[:]            # cards still to master
+    random.shuffle(remaining)
+    total = len(remaining)
+    correct = wrong = 0
 
-    total        = len(draw_pile)
-    correct_cnt  = 0
-    wrong_cnt    = 0
-    seen_counter = 0             # how many cards have been shown so far
-
-    while draw_pile:
-        card = draw_pile.pop(0)
-        seen_counter += 1        # this card is now being shown
-
-        good = ask(card,
-                    idx=seen_counter,
-                    total=total,
-                    correct=correct_cnt,
-                    wrong=wrong_cnt)
+    while remaining:
+        card = remaining.pop(0)
+        idx  = total - len(remaining)   # 1‑based position
+        good = ask_basic(card, idx, total, correct, wrong)
 
         if good:
-            correct_cnt += 1
-            print("👍  Correct!")
-            if endless:
-                draw_pile.append(card)     # recycle for endless mode
+            correct += 1
+            if endless:                 # recycle only in endless mode
+                remaining.append(card)
         else:
-            wrong_cnt += 1
-            draw_pile.append(card)         # put back for another try
-            print("👎  Wrong. Card goes back.")
+            wrong += 1
+            remaining.append(card)
 
     print(f"\n🎉  All {total} cards answered correctly!")
-    print(f"Session summary → ✔ {correct_cnt}  ✘ {wrong_cnt}")
+    print(f"Session summary → ✔ {correct}  ✘ {wrong}")
+    print("Thank you — game over!\n")
+# ────────────────────────────────────────────────────────────────
+# MULTIPLE‑CHOICE helpers
+def ask_mc(card, idx, total, correct, wrong):
+    options = [card["back"]] + card["distractors"][:2]
+    while len(options) < 3:
+        options.append("N/A")
+    random.shuffle(options)
+    correct_idx = options.index(card["back"]) + 1
 
+    print(f"\n── Card {idx}/{total}  |  ✔ {correct}  ✘ {wrong} ──")
+    print(f"❓  {card['front']}\n")
+    for i, opt in enumerate(options, 1):
+        print(f"  {i}. {opt}")
+    choice = input("\nSelect 1‑3: ").strip()
+    right = choice == str(correct_idx)
+    print("✅  Correct!\n" if right else f"❌  Wrong. Correct answer: {card['back']}\n")
+    return right
+
+def play_mc(cards, endless=False):
+    remaining = cards[:]
+    random.shuffle(remaining)
+    total = len(remaining)
+    correct = wrong = 0
+
+    while remaining:
+        card = remaining.pop(0)
+        idx  = total - len(remaining)
+        good = ask_mc(card, idx, total, correct, wrong)
+
+        if good:
+            correct += 1
+            if endless:
+                remaining.append(card)
+        else:
+            wrong += 1
+            remaining.append(card)
+
+    print(f"\n🎉  All {total} cards answered correctly!")
+    print(f"Session summary → ✔ {correct}  ✘ {wrong}")
+    print("Thank you — game over!\n")
+# ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cards_json", help="*.cards.json produced by flashcard_gen")
+    ap.add_argument("cards_json")
+    ap.add_argument("--mode", choices=["basic", "mc"], default="basic",
+                    help="'basic' (default) or 'mc' for multiple‑choice")
     ap.add_argument("--endless", action="store_true")
     args = ap.parse_args()
-    play(load_cards(args.cards_json), endless=args.endless)
+
+    cards = load_cards(args.cards_json)
+    if args.mode == "mc":
+        play_mc(cards, endless=args.endless)
+    else:
+        play_basic(cards, endless=args.endless)

@@ -3,7 +3,8 @@ from __future__ import annotations
 import pathlib, sys, pickle, argparse
 from driver import run_extraction
 from flashcard_gen import build_deck
-from game2_cli import play, load_cards
+from game2_cli import load_cards
+
 
 def main():
     # ── 0. CLI flags ───────────────────────────────────────────────────────
@@ -26,52 +27,74 @@ def main():
         pdf_path = args.file
     else:
         while True:
-            path_str = input("Path to deposition PDF/DOCX/image: ").strip('" ')
+            path_str = input("Path to PDF/DOCX/image  *or*  existing cards.json: ").strip('" ')
             pdf_path = pathlib.Path(path_str)
             if pdf_path.exists():
                 break
             print("❌  File not found — try again.\n")
 
+    # ── 1‑b. Quick‑play if user gave a .cards.json file ───────────────────────
+    if pdf_path.suffix.lower() == ".json":
+        json_path = pdf_path
+        print(f"\n▶  Using pre‑existing card set: {json_path.name}")
+        # ask play‑prompt just like normal build path
+        goto_play = True
+    else:
+        goto_play = False
+
     # ── 2. Ask for test‑mode if flag not supplied ─────────────────────────
     if args.test_chunks is None:
         reply = input("Activate test mode? (y/n) ").lower().strip()
         if reply.startswith("y"):
-            args.test_chunks = 2   # default sample size
+            args.test_chunks = 1   # default sample size
+    if not goto_play:
+        # ── 3. Extract & chunk ────────────────────────────────────────────────
+        print(f"\n▶  Extracting & chunking {pdf_path.name} …")
+        chunks = run_extraction(pdf_path, max_tokens=args.tokens)
+        if args.test_chunks:
+            chunks = chunks[: args.test_chunks]
+            print(f"[pipeline] Test mode ON — using first {args.test_chunks} chunks")
 
-    # ── 3. Extract & chunk ────────────────────────────────────────────────
-    print(f"\n▶  Extracting & chunking {pdf_path.name} …")
-    chunks = run_extraction(pdf_path, max_tokens=args.tokens)
-    if args.test_chunks:
-        chunks = chunks[: args.test_chunks]
-        print(f"[pipeline] Test mode ON — using first {args.test_chunks} chunks")
+        # ── 4. Cache chunks to .pkl ───────────────────────────────────────────
+        cache_path = pdf_path.with_suffix(".chunks.pkl")
+        cache_path.write_bytes(pickle.dumps(chunks))
+        print(f"[pipeline] Chunks cached → {cache_path.name}")
 
-    # ── 4. Cache chunks to .pkl ───────────────────────────────────────────
-    cache_path = pdf_path.with_suffix(".chunks.pkl")
-    cache_path.write_bytes(pickle.dumps(chunks))
-    print(f"[pipeline] Chunks cached → {cache_path.name}")
+        # ── 5. Build deck + JSON ─────────────────────────────────────────────
+        deck_name = pdf_path.stem + ("_TEST" if args.test_chunks else "")
+        deck_path = build_deck(chunks, deck_name=deck_name,
+                            max_cards_per_chunk=args.cards)
+        json_path = deck_path.with_suffix(".cards.json")
 
-    # ── 5. Build deck + JSON ─────────────────────────────────────────────
-    deck_name = pdf_path.stem + ("_TEST" if args.test_chunks else "")
-    deck_path = build_deck(chunks, deck_name=deck_name,
-                           max_cards_per_chunk=args.cards)
-    json_path = deck_path.with_suffix(".cards.json")
+        print(f"\n✅  Deck:  {deck_path.name}")
+        print(f"✅  JSON:  {json_path.name}")
+        json_path = deck_path.with_suffix(".cards.json")
 
-    print(f"\n✅  Deck:  {deck_path.name}")
-    print(f"✅  JSON:  {json_path.name}")
-
-        # ── 6. Prompt to play Game 2 ──────────────────────────────────────────
+    # ── 6. Prompt to play ─────────────────────────────────────────────────
     reply = input("\nPlay Game 2 now? (Y/n) ").lower().strip()
     if reply.startswith("n"):
         print("Bye!  Import the .apkg into Anki whenever you like.")
         sys.exit()
 
-    # ── 6-b. Ask for Endless mode if not set via CLI flag ────────────────
+    # ── 6‑b. Choose mode ─────────────────────────────────────────────────
+    while True:
+        mode_input = input("Choose mode: 1) Basic flashcards  2) Multiple‑choice : ").strip()
+        if mode_input in {"1", "2"}:
+            break
+        print("Please type 1 or 2.")
+    mode = "mc" if mode_input == "2" else "basic"
+
     if not args.endless:
-        endless_reply = input("Enable endless mode? (y/n) ").lower().strip()
+        endless_reply = input("Enable endless mode (recycle correct cards)? (y/N) ").lower().strip()
         args.endless = endless_reply.startswith("y")
 
-    # ── 7. Launch Mastery Drill ──────────────────────────────────────────
-    play(load_cards(json_path), endless=args.endless)
+    # ── 7. Launch chosen drill ───────────────────────────────────────────
+    if mode == "mc":
+        from game2_cli import play_mc as play_fn
+    else:
+        from game2_cli import play_basic as play_fn
 
+    play_fn(load_cards(json_path), endless=args.endless)
+#----
 if __name__ == "__main__":
-    main()
+        main()
