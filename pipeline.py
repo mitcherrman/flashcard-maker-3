@@ -4,6 +4,7 @@ import pathlib, sys, pickle, argparse
 from driver import run_extraction
 from flashcard_gen import build_deck
 from game2_cli import load_cards
+import random
 
 
 def main():
@@ -51,9 +52,10 @@ def main():
         # ── 3. Extract & chunk ────────────────────────────────────────────────
         print(f"\n▶  Extracting & chunking {pdf_path.name} …")
         chunks = run_extraction(pdf_path, max_tokens=args.tokens)
-        if args.test_chunks:
-            chunks = chunks[: args.test_chunks]
-            print(f"[pipeline] Test mode ON — using first {args.test_chunks} chunks")
+    if args.test_chunks:
+        take = min(args.test_chunks, len(chunks))
+        chunks = random.sample(chunks, take)
+        print(f"[pipeline] Test mode ON — using {take} random chunk(s)")
 
         # ── 4. Cache chunks to .pkl ───────────────────────────────────────────
         cache_path = pdf_path.with_suffix(".chunks.pkl")
