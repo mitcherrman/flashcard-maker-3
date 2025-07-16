@@ -1,5 +1,5 @@
 # flashcard_gen.py --------------------------------------------------------
-import os, json, random, pathlib
+import os, json, random, pathlib, sys
 from typing import List
 from decouple import config
 from openai import OpenAI
@@ -43,11 +43,16 @@ Limit to **{{max_cards}}** cards.
 
 def build_deck(chunks: List[str], deck_name: str,
                max_cards_per_chunk: int = 10) -> pathlib.Path:
-    """Return Path to the generated .apkg file."""
+    """Return Path to the generated .apkg file and also write a .cards.json file."""
     all_cards = []
     for i, ch in enumerate(chunks, 1):
         print(f"[flashcard_gen] GPT on chunk {i}/{len(chunks)}")
         all_cards.extend(_cards_from_chunk(ch, max_cards_per_chunk))
+
+    # --- JSON dump for Game 2 ---
+    json_path = pathlib.Path(deck_name.replace(" ", "_") + ".cards.json")
+    json_path.write_text(json.dumps(all_cards, ensure_ascii=False, indent=2))
+    print("[flashcard_gen] Card JSON written →", json_path)
 
     deck = genanki.Deck(random.randrange(1<<30), deck_name[:90])
     model = genanki.Model(

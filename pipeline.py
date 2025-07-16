@@ -66,4 +66,6 @@ print(f"[pipeline] Chunks cached → {cache_path.name}")
 deck_name = file_path.stem + ("_TEST" if args.test_chunks else "")
 deck_path = build_deck(chunks, deck_name=deck_name, max_cards_per_chunk=args.cards)
 
+cards_json = deck_path.with_suffix(".cards.json")
+print(f"[pipeline] JSON for Game 2 -> {cards_json.name}")
 print(f"\n✅  All done! Import {deck_path.name} into Anki.")
