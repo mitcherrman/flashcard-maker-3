@@ -44,10 +44,14 @@ Limit to **{{max_cards}}** cards.
 def build_deck(chunks: List[str], deck_name: str,
                max_cards_per_chunk: int = 10) -> pathlib.Path:
     """Return Path to the generated .apkg file and also write a .cards.json file."""
-    all_cards = []
+    all_cards: list[dict] = []
     for i, ch in enumerate(chunks, 1):
-        print(f"[flashcard_gen] GPT on chunk {i}/{len(chunks)}")
-        all_cards.extend(_cards_from_chunk(ch, max_cards_per_chunk))
+        new_cards = _cards_from_chunk(ch, max_cards_per_chunk)
+        print(f"[flashcard_gen] Chunk {i}/{len(chunks)} → {len(new_cards)} card(s)")
+        all_cards.extend(new_cards)
+    total_cards = len(all_cards)
+    print(f"[flashcard_gen] Total cards generated: {total_cards}")
+
 
     # --- JSON dump for Game 2 ---
     json_path = pathlib.Path(deck_name.replace(" ", "_") + ".cards.json")
