@@ -73,7 +73,7 @@ def main():
         json_path = deck_path.with_suffix(".cards.json")
 
     # ── 6. Prompt to play ─────────────────────────────────────────────────
-    reply = input("\nPlay Game 2 now? (Y/n) ").lower().strip()
+    reply = input("\nPlay Game 2 now? (y/n) ").lower().strip()
     if reply.startswith("n"):
         print("Bye!  Import the .apkg into Anki whenever you like.")
         sys.exit()
@@ -87,7 +87,7 @@ def main():
     mode = "mc" if mode_input == "2" else "basic"
 
     if not args.endless:
-        endless_reply = input("Enable endless mode (recycle correct cards)? (y/N) ").lower().strip()
+        endless_reply = input("Enable endless mode? (y/n) ").lower().strip()
         args.endless = endless_reply.startswith("y")
 
     # ── 7. Launch chosen drill ───────────────────────────────────────────

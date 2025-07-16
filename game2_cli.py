@@ -22,6 +22,7 @@ def play_basic(cards, endless=False):
     random.shuffle(remaining)
     total = len(remaining)
     correct = wrong = 0
+    stats = {c["id"]: {"right": 0, "wrong": 0} for c in cards}
 
     while remaining:
         card = remaining.pop(0)
@@ -30,14 +31,22 @@ def play_basic(cards, endless=False):
 
         if good:
             correct += 1
+            stats[card["id"]]["right"] += 1
             if endless:                 # recycle only in endless mode
                 remaining.append(card)
         else:
             wrong += 1
+            stats[card["id"]]["wrong"] += 1
             remaining.append(card)
 
     print(f"\n🎉  All {total} cards answered correctly!")
     print(f"Session summary → ✔ {correct}  ✘ {wrong}")
+    print("\n── Per‑card stats ─────────────────────────────")
+    for idx, card in enumerate(cards, 1):
+        s = stats[card["id"]]
+        print(f"Card {idx}/{total}:  "
+              f"✔ {s['right']}  ✘ {s['wrong']}  — {card['front'][:60]}…")
+
     print("Thank you — game over!\n")
 # ────────────────────────────────────────────────────────────────
 # MULTIPLE‑CHOICE helpers
@@ -62,6 +71,7 @@ def play_mc(cards, endless=False):
     random.shuffle(remaining)
     total = len(remaining)
     correct = wrong = 0
+    stats = {c["id"]: {"right": 0, "wrong": 0} for c in cards}   
 
     while remaining:
         card = remaining.pop(0)
@@ -70,14 +80,21 @@ def play_mc(cards, endless=False):
 
         if good:
             correct += 1
+            stats[card["id"]]["right"] += 1
             if endless:
                 remaining.append(card)
         else:
             wrong += 1
+            stats[card["id"]]["wrong"] += 1
             remaining.append(card)
 
     print(f"\n🎉  All {total} cards answered correctly!")
     print(f"Session summary → ✔ {correct}  ✘ {wrong}")
+    print("\n── Per‑card stats ─────────────────────────────")
+    for idx, card in enumerate(cards, 1):
+        s = stats[card["id"]]
+        print(f"Card {idx}/{total}:  "
+              f"✔ {s['right']}  ✘ {s['wrong']}  — {card['front'][:60]}…")
     print("Thank you — game over!\n")
 # ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
