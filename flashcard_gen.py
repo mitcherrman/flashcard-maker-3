@@ -18,7 +18,7 @@ Goals:
 2. Each card must be self‑contained; never refer to pages or exhibits.
 3. Provide **exactly one** correct answer and **two** plausible but wrong
    answers (distractors).
-4. Skip cards if the answer would be too vague or redundant.
+4. Do not give vague or redundant answers.
 
 Return JSON:
 {
@@ -77,13 +77,3 @@ def build_deck(chunks: List[str], deck_name: str,
     genanki.Package(deck).write_to_file(out)
     print("[flashcard_gen] Deck written →", out.resolve())
     return out
-
-# — optional CLI for pickle replay —
-if __name__ == "__main__":
-    import argparse, pickle
-    p = argparse.ArgumentParser()
-    p.add_argument("pickle", type=pathlib.Path, help="*.chunks.pkl file")
-    p.add_argument("--cards", type=int, default=10)
-    a = p.parse_args()
-    chunks = pickle.loads(a.pickle.read_bytes())
-    build_deck(chunks, a.pickle.stem, a.cards)

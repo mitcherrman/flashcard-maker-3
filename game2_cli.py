@@ -96,17 +96,3 @@ def play_mc(cards, endless=False):
         print(f"Card {idx}/{total}:  "
               f"✔ {s['right']}  ✘ {s['wrong']}  — {card['front'][:60]}…")
     print("Thank you — game over!\n")
-# ────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("cards_json")
-    ap.add_argument("--mode", choices=["basic", "mc"], default="basic",
-                    help="'basic' (default) or 'mc' for multiple‑choice")
-    ap.add_argument("--endless", action="store_true")
-    args = ap.parse_args()
-
-    cards = load_cards(args.cards_json)
-    if args.mode == "mc":
-        play_mc(cards, endless=args.endless)
-    else:
-        play_basic(cards, endless=args.endless)
