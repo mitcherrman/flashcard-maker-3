@@ -1,5 +1,5 @@
 # flashcard_gen.py --------------------------------------------------------
-import os, json, random, pathlib
+import os, json, random, pathlib, sys
 from typing import List
 from decouple import config
 from openai import OpenAI
@@ -10,25 +10,29 @@ client = OpenAI()                               # picks up key from env
 
 def _cards_from_chunk(chunk: str, max_cards=10):
     sys_msg = SYSTEM_PROMPT = """
-You are an expert flash-card author.
+You are an expert flash‑card author.
 
 Goals:
-1. Create Q-A pairs that help a student remember the *substantive* facts,
-   definitions, dates, or numbers in the text.
-2. Each card must be self-contained – never refer to “page X”, “see above”,
-   or “the exhibit”.
-3. Answers must be concrete and complete, never “he had issues with exhibits”.
-4. Skip cards if the answer would be too vague or redundant.
+1. Create *multiple‑choice* Q‑A pairs that help a student remember the
+   substantive facts, definitions, dates, or numbers in the text.
+2. Each card must be self‑contained; never refer to pages or exhibits.
+3. Provide **exactly one** correct answer and **two** plausible but wrong
+   answers (distractors).
+4. Do not give vague or redundant answers.
 
 Return JSON:
 {
   "cards": [
-    {"front": "...", "back": "..."},
-    ...
+    {
+      "front": "...question...",
+      "back":  "...correct answer...",
+      "distractors": ["wrong A", "wrong B"]
+    }
   ]
 }
-Limit to **{{max_cards}}** cards.
+Limit to {max_cards} cards.
 """
+
 
     resp = client.chat.completions.create(
     model="gpt-4o-mini",
@@ -43,11 +47,20 @@ Limit to **{{max_cards}}** cards.
 
 def build_deck(chunks: List[str], deck_name: str,
                max_cards_per_chunk: int = 10) -> pathlib.Path:
-    """Return Path to the generated .apkg file."""
-    all_cards = []
+    """Return Path to the generated .apkg file and also write a .cards.json file."""
+    all_cards: list[dict] = []
     for i, ch in enumerate(chunks, 1):
-        print(f"[flashcard_gen] GPT on chunk {i}/{len(chunks)}")
-        all_cards.extend(_cards_from_chunk(ch, max_cards_per_chunk))
+        new_cards = _cards_from_chunk(ch, max_cards_per_chunk)
+        print(f"[flashcard_gen] Chunk {i}/{len(chunks)} → {len(new_cards)} card(s)")
+        all_cards.extend(new_cards)
+    total_cards = len(all_cards)
+    print(f"[flashcard_gen] Total cards generated: {total_cards}")
+
+
+    # --- JSON dump for Game 2 ---
+    json_path = pathlib.Path(deck_name.replace(" ", "_") + ".cards.json")
+    json_path.write_text(json.dumps(all_cards, ensure_ascii=False, indent=2))
+    print("[flashcard_gen] Card JSON written →", json_path)
 
     deck = genanki.Deck(random.randrange(1<<30), deck_name[:90])
     model = genanki.Model(
@@ -64,13 +77,3 @@ def build_deck(chunks: List[str], deck_name: str,
     genanki.Package(deck).write_to_file(out)
     print("[flashcard_gen] Deck written →", out.resolve())
     return out
-
-# — optional CLI for pickle replay —
-if __name__ == "__main__":
-    import argparse, pickle
-    p = argparse.ArgumentParser()
-    p.add_argument("pickle", type=pathlib.Path, help="*.chunks.pkl file")
-    p.add_argument("--cards", type=int, default=10)
-    a = p.parse_args()
-    chunks = pickle.loads(a.pickle.read_bytes())
-    build_deck(chunks, a.pickle.stem, a.cards)
