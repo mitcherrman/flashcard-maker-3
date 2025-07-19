@@ -19,12 +19,12 @@ def generate_from_prompt(topic: str, num_cards: int) -> FileResponse:
         4. Skip cards if the answer would be too vague or redundant.
 
         Return JSON:
-        {
+        {{
         "cards": [
-            {"front": "...", "back": "..."},
+            {{"front": "...", "back": "..."}},
             ...
         ]
-        }
+        }}
         Limit to **{{max_cards}}** cards.
         """
 
@@ -41,7 +41,8 @@ def generate_from_prompt(topic: str, num_cards: int) -> FileResponse:
     
     cards = json.loads(response.choices[0].message.content)["cards"] # Parse "cards"
     output_path = create_anki_deck(cards, topic)
-    return FileResponse(output_path, filename="flashcards.apkg", media_type="application/octet-stream") # Returns anki deck downloadable
+    return cards # For testing
+    # return FileResponse(output_path, filename="flashcards.apkg", media_type="application/octet-stream") # Returns anki deck downloadable
 
 # Create an Anki deck file from "cards" and return the file path
 def create_anki_deck(response: list[dict], topic: str) -> str:
