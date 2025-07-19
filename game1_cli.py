@@ -2,7 +2,7 @@
 import json, random, pathlib, argparse, pickle, os
 from typing import List, Tuple
 
-HAND_MIN, HAND_MAX = 10, 12
+HAND_MIN, HAND_MAX = 3, 12
 PROFILE_PATH = pathlib.Path("user_profile.json")
 
 
@@ -43,7 +43,7 @@ def gpt_refurbish(kept: List[dict], tossed: List[dict]) -> List[dict]:
 
 
 # ── Main game loop ────────────────────────────────────────────────────────
-def play_curate(cards: List[dict], *, endless: bool = False):
+def play_curate(cards: List[dict], source_file: str, *, endless: bool = False):
     pool = cards[:]               # mutable copy
     kept_deck = []
     graveyard = []
@@ -98,15 +98,19 @@ def play_curate(cards: List[dict], *, endless: bool = False):
     
     # --- Write session TXT -----------------------------------------------
     
-    base = pathlib.Path(args.cards_json).stem.rsplit(".", 1)[0]  # drop _TEST etc.
+        # --- Write session TXT -------------------------------------------
+    base = pathlib.Path(source_file).stem.rsplit(".", 1)[0]
     sess_path = pathlib.Path(base + "_session.txt")
+
     report = []
     for c in kept_deck:
         report.append("[KEPT]   " + c["front"] + "  ->  " + c["back"])
     for c in graveyard:
         report.append("[THROWN] " + c["front"] + "  ->  " + c["back"])
+
     sess_path.write_text("\n\n".join(report), encoding="utf-8")
     print(f"\n📝  Session log written → {sess_path.resolve()}")
+
 
     print("\nThank you — Game 1 over!\n")
 

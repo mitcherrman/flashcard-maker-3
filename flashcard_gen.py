@@ -8,7 +8,7 @@ import genanki
 os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
 client = OpenAI()                               # picks up key from env
 
-def _cards_from_chunk(chunk: str, max_cards: int = 10):
+def _cards_from_chunk(chunk: str, max_cards: int = 3):
     SYSTEM_PROMPT = """
 You are an expert flash‑card author and lawyer preparing study material
 for a fellow lawyer who must review the main points of the input document.
@@ -72,7 +72,7 @@ Limit to {max_cards} cards.
     return cards
 
 def build_deck(chunks: List[str], deck_name: str,
-               max_cards_per_chunk: int = 10) -> pathlib.Path:
+               max_cards_per_chunk: int = 3) -> pathlib.Path:
     """Return Path to the generated .apkg file and also write a .cards.json file."""
     all_cards: list[dict] = []
     for i, ch in enumerate(chunks, 1):
@@ -101,7 +101,7 @@ def build_deck(chunks: List[str], deck_name: str,
 
     deck = genanki.Deck(random.randrange(1<<30), deck_name[:90])
     model = genanki.Model(
-        random.randrange(1<<30), "Basic",
+        1537156452, "Basic",
         fields=[{"name":"Front"},{"name":"Back"}],
         templates=[{"name":"Card",
                     "qfmt":"{{Front}}",

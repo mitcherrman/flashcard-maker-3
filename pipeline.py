@@ -14,8 +14,8 @@ def main():
                      help="Path to PDF / DOCX / image (prompted if omitted)")
     cli.add_argument("--tokens", type=int, default=700,
                      help="Max tokens per chunk (default 700)")
-    cli.add_argument("--cards", type=int, default=10,
-                     help="Max cards per chunk (default 10)")
+    cli.add_argument("--cards", type=int, default=3,
+                     help="Max cards per chunk (default 3)")
     cli.add_argument("-n", "--test-chunks", type=int, default=None,
                      help="Process only first N chunks (interactive prompt if missing)")
     cli.add_argument("--endless", action="store_true",
@@ -91,33 +91,26 @@ def main():
         print("Invalid input. Exiting.")
         sys.exit()
 
-    # ── 6‑b. Game‑specific options ──────────────────────────────────────
-    if game_choice == "1":
-        # Game 1 — no endless, no MC/BASIC distinction
-        from game1_cli import play_curate as play_fn
-        endless = False  # not used, but keep signature
-    else:
-        # Game 2 — ask for Basic vs Multiple‑choice and endless toggle
+    # ── 6‑b. Game‑specific options & launcher ─────────────────────────────
+    if game_choice == "1":                         # Curate & Improve
+        from game1_cli import play_curate
+        play_curate(load_cards(json_path), str(json_path))   # ← pass path
+
+    else:                                          # Mastery Drill
         while True:
             gm2_mode = input("Mode: 1) Basic  2) Multiple‑choice : ").strip()
             if gm2_mode in {"1", "2"}:
                 break
-        mode = "mc" if gm2_mode == "2" else "basic"
-
         endless = args.endless
-        if not args.endless:
-            endless_reply = input(
-                "Enable endless mode (recycle correct cards)? (y/N) "
-            ).lower().strip()
-            endless = endless_reply.startswith("y")
+        if not endless:
+            endless = input("Enable endless mode? (y/N) ").lower().startswith("y")
 
-        if mode == "mc":
-            from game2_cli import play_mc as play_fn
+        if gm2_mode == "2":
+            from game2_cli import play_mc as play_drill
         else:
-            from game2_cli import play_basic as play_fn
+            from game2_cli import play_basic as play_drill
 
-    # ── 7. Launch the chosen game ───────────────────────────────────────
-    play_fn(load_cards(json_path), endless=endless)
+        play_drill(load_cards(json_path), endless=endless)
 
 #----
 if __name__ == "__main__":
