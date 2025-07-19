@@ -7,7 +7,7 @@ from game2_cli import load_cards
 import random
 
 
-def main():
+def game():
     # ── 0. CLI flags ───────────────────────────────────────────────────────
     cli = argparse.ArgumentParser(description="PDF → flash‑cards → Game 2")
     cli.add_argument("file", nargs="?", type=pathlib.Path,
@@ -111,7 +111,3 @@ def main():
             from game2_cli import play_basic as play_drill
 
         play_drill(load_cards(json_path), endless=endless)
-
-#----
-if __name__ == "__main__":
-        main()

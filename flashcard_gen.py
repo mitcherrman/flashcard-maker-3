@@ -5,8 +5,7 @@ from decouple import config
 from openai import OpenAI
 import genanki
 
-os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
-client = OpenAI()                               # picks up key from env
+client = OpenAI()
 
 def _cards_from_chunk(chunk: str, max_cards: int = 3):
     SYSTEM_PROMPT = """
@@ -71,6 +70,7 @@ Limit to {max_cards} cards.
     cards = cards[:max_cards] if isinstance(cards, list) else []
     return cards
 
+# Call in _cards_from_chunk if using anki
 def build_deck(chunks: List[str], deck_name: str,
                max_cards_per_chunk: int = 3) -> pathlib.Path:
     """Return Path to the generated .apkg file and also write a .cards.json file."""
