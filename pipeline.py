@@ -47,7 +47,13 @@ def main():
     if args.test_chunks is None:
         reply = input("Activate test mode? (y/n) ").lower().strip()
         if reply.startswith("y"):
-            args.test_chunks = 1   # default sample size
+            while True:
+                cnt = input("How many random chunks (1‑5)? ").strip()
+                if cnt.isdigit() and 1 <= int(cnt) <= 5:
+                    args.test_chunks = int(cnt)
+                    break
+                print("Please enter a number between 1 and 5.")
+
     if not goto_play:
         # ── 3. Extract & chunk ────────────────────────────────────────────────
         print(f"\n▶  Extracting & chunking {pdf_path.name} …")
@@ -72,31 +78,47 @@ def main():
         print(f"✅  JSON:  {json_path.name}")
         json_path = deck_path.with_suffix(".cards.json")
 
-    # ── 6. Prompt to play ─────────────────────────────────────────────────
-    reply = input("\nPlay Game 2 now? (y/n) ").lower().strip()
-    if reply.startswith("n"):
+        # ── 6. Choose which game to play ─────────────────────────────────────
+    game_choice = input(
+        "\nPlay a game now?  1) Curate & Improve   2) Mastery Drill   (n = cancel) : "
+    ).lower().strip()
+
+    if game_choice.startswith("n"):
         print("Bye!  Import the .apkg into Anki whenever you like.")
         sys.exit()
 
-    # ── 6‑b. Choose mode ─────────────────────────────────────────────────
-    while True:
-        mode_input = input("Choose mode: 1) Basic flashcards  2) Multiple‑choice : ").strip()
-        if mode_input in {"1", "2"}:
-            break
-        print("Please type 1 or 2.")
-    mode = "mc" if mode_input == "2" else "basic"
+    if game_choice not in {"1", "2"}:
+        print("Invalid input. Exiting.")
+        sys.exit()
 
-    if not args.endless:
-        endless_reply = input("Enable endless mode? (y/n) ").lower().strip()
-        args.endless = endless_reply.startswith("y")
-
-    # ── 7. Launch chosen drill ───────────────────────────────────────────
-    if mode == "mc":
-        from game2_cli import play_mc as play_fn
+    # ── 6‑b. Game‑specific options ──────────────────────────────────────
+    if game_choice == "1":
+        # Game 1 — no endless, no MC/BASIC distinction
+        from game1_cli import play_curate as play_fn
+        endless = False  # not used, but keep signature
     else:
-        from game2_cli import play_basic as play_fn
+        # Game 2 — ask for Basic vs Multiple‑choice and endless toggle
+        while True:
+            gm2_mode = input("Mode: 1) Basic  2) Multiple‑choice : ").strip()
+            if gm2_mode in {"1", "2"}:
+                break
+        mode = "mc" if gm2_mode == "2" else "basic"
 
-    play_fn(load_cards(json_path), endless=args.endless)
+        endless = args.endless
+        if not args.endless:
+            endless_reply = input(
+                "Enable endless mode (recycle correct cards)? (y/N) "
+            ).lower().strip()
+            endless = endless_reply.startswith("y")
+
+        if mode == "mc":
+            from game2_cli import play_mc as play_fn
+        else:
+            from game2_cli import play_basic as play_fn
+
+    # ── 7. Launch the chosen game ───────────────────────────────────────
+    play_fn(load_cards(json_path), endless=endless)
+
 #----
 if __name__ == "__main__":
         main()

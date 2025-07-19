@@ -8,7 +8,7 @@ from chunker import make_chunks
 # ensure the key is in the environment before any sub-imports need it
 os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
 
-def run_extraction(path: Path, max_tokens: int = 700):
+def run_extraction(path: Path, max_tokens: int = 900):
     """Return a list[str] of GPT-sized chunks from a document."""
     raw = extract_text(path)
     chunks = make_chunks(raw, max_tokens=max_tokens)

@@ -24,7 +24,7 @@ enc = tiktoken.encoding_for_model("gpt-4o-mini")  # falls back to cl100k_base
 
 # ── 2. Chunker ─────────────────────────────────────────────────────────────
 
-def make_chunks(text: str, max_tokens: int = 700) -> List[str]:
+def make_chunks(text: str, max_tokens: int = 900) -> List[str]:
     """Greedy, paragraph‑aware splitter.
 
     1. Keeps whole paragraphs together (splits on blank lines).

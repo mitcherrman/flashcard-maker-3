@@ -27,5 +27,7 @@ def extract_text(path) -> str:
     elif suffix in {".png", ".jpg", ".jpeg", ".tiff", ".bmp"}:  # ── Image
         img = Image.open(p)
         return pytesseract.image_to_string(img)
+    elif suffix == ".txt":                         # ── Plain text
+        return p.read_text(encoding="utf-8", errors="ignore")
 
     raise ValueError(f"Unsupported file type: {suffix}")
