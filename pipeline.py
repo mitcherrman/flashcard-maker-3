@@ -23,6 +23,7 @@ def game():
     args = cli.parse_args()
 
     # ── 1. Ask for file path if missing ───────────────────────────────────
+    
     pdf_path: pathlib.Path
     if args.file and args.file.exists():
         pdf_path = args.file

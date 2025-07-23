@@ -5,8 +5,10 @@ Turn PDFs, Word docs, or images into plain-text strings.
 from pathlib import Path
 import fitz          # PyMuPDF
 import docx          # python-docx
-import pytesseract
-from PIL import Image
+# import pytesseract
+# from PIL import Image
+
+print("in ingest")
 
 def extract_text(path) -> str:
     """
@@ -24,9 +26,9 @@ def extract_text(path) -> str:
         doc = docx.Document(p)
         return "\n".join(par.text for par in doc.paragraphs)
 
-    elif suffix in {".png", ".jpg", ".jpeg", ".tiff", ".bmp"}:  # ── Image
-        img = Image.open(p)
-        return pytesseract.image_to_string(img)
+    # elif suffix in {".png", ".jpg", ".jpeg", ".tiff", ".bmp"}:  # ── Image
+    #     img = Image.open(p)
+    #     return pytesseract.image_to_string(img)
     elif suffix == ".txt":                         # ── Plain text
         return p.read_text(encoding="utf-8", errors="ignore")
 

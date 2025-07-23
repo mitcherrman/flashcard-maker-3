@@ -1,9 +1,16 @@
-import os, json
+import os
 from decouple import config
-from prompt_cards import generate_from_prompt
-from ingest import extract_text
+os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
 
- 
+import json
+# from prompt_cards import generate_from_prompt
+# from ingest import extract_text
+from pipeline import game
+import subprocess
+
+
+
+'''
 def main(option: str):    
     if option == "from_pdf":
         path = input("File path")
@@ -17,12 +24,11 @@ def main(option: str):
 if __name__ == "__main__":
     os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
     main("user option placeholder")
-
-
 '''
+
+
 # testing each option seperately
 if __name__ == "__main__":
-    os.environ.setdefault("OPENAI_API_KEY", config("OPENAI_API_KEY"))
-    cards = generate_from_prompt("world war 2", 3)
-    print(json.dumps(cards, indent=2))
-    '''
+    print("running pipeline")
+    subprocess.run(["python", "C:/Users/ethan/flashcard-maker-3/pipeline.py"]) # Change file path to file to be tested
+    game()

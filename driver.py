@@ -1,9 +1,10 @@
 # driver.py ---------------------------------------------------------------
 import os
 from pathlib import Path
-from decouple import config
 from ingest import extract_text
 from chunker import make_chunks
+
+print("in driver")
 
 def run_extraction(path: Path, max_tokens: int = 900):
     """Return a list[str] of GPT-sized chunks from a document."""

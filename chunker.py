@@ -15,6 +15,8 @@ Typical usage
 >>> vectors = embed_chunks(pieces)   # only if you actually need them
 """
 
+print("in chunker")
+
 # ── 1. Imports ──────────────────────────────────────────────────────────────
 from typing import List
 import tiktoken  # Official OpenAI tokenizer
