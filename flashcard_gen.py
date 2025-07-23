@@ -1,11 +1,15 @@
 # flashcard_gen.py --------------------------------------------------------
 import os, json, random, pathlib, sys
 from typing import List
-from decouple import config
 from openai import OpenAI
 import genanki
 
-client = OpenAI()
+print("in flashcard_gen")
+
+def get_client():
+    from openai import OpenAI
+    import os
+    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _cards_from_chunk(chunk: str, max_cards: int = 3):
     SYSTEM_PROMPT = """
@@ -49,6 +53,7 @@ Limit to {max_cards} cards.
     # --- build the system message ---
     system_msg = SYSTEM_PROMPT.format(max_cards=max_cards)
 
+    client = get_client()
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
